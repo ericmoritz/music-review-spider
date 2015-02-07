@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -e
+
+mkdir -p pitchfork.com/in
+
+for i in pitchfork.com/reviews/albums/*-*/index.html; do
+    cp $i pitchfork.com/in/$(basename $(dirname $i)).html
+done
+

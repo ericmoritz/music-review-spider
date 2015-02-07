@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Download the index first
+wget -r --accept-regex "http://pitchfork.com/reviews/albums/[0-3]+/" http://pitchfork.com/reviews/albums/
+
+# Now download the detail pages but only if we haven't seen them before
+wget -r -nc --accept-regex "http://pitchfork.com/reviews/albums/.+-.+/$" pitchfork.com/reviews/albums/*/index.html
