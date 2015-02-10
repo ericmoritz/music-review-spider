@@ -44,6 +44,8 @@ object pitchforkReviewMiner {
         ).first
       ).map { x => new URI(x.attr("content")) }
 
+      ratingUri = new URI(uri.toString + "#rating")
+
       albumTitle <- Option(
         doc.select(
           """.review-meta .info h2"""
@@ -91,7 +93,11 @@ object pitchforkReviewMiner {
           reviewerUri,
           reviewerName
         ),
-        Rating(rating, 10)
+        Rating(
+          ratingUri,
+          rating, 
+          10
+        )
       )
     }
   }

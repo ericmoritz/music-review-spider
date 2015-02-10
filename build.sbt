@@ -14,8 +14,14 @@ libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.10"
 
 libraryDependencies += "org.apache.spark" %% "spark-core" % "1.2.0"
 
+libraryDependencies += "org.openrdf.sesame" % "sesame-repository" % "2.7.14"
+
+libraryDependencies += "org.openrdf.sesame" % "sesame-repository-sparql" % "2.7.14"
+
 scalacOptions in Test ++= Seq("-Yrangepos")
 
 resolvers ++= Seq("snapshots", "releases").map(Resolver.sonatypeRepo)
 
 enablePlugins(JavaAppPackaging)
+
+net.virtualvoid.sbt.graph.Plugin.graphSettings

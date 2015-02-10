@@ -2,8 +2,16 @@ package mrs.models
 
 import java.net.{URI, URLEncoder}
 import org.json4s._
+import mrs.const.RDFConst
+import org.openrdf.model.impl.ValueFactoryImpl
+import org.openrdf.model.{URI => RURI, BNode, Resource, Value, Statement}
 
-class RDFObject
+class RDFObject {
+  val factory = ValueFactoryImpl.getInstance()
+  def ref(uri: URI): RURI = factory.createURI(uri.toString)
+  def ref(p: String): RURI = factory.createURI(s"${RDFConst.Namespace}${p}")
+  def stmt(s: Resource, p: RURI, o: Value) = factory.createStatement(s, p, o)
+}
 
 case class Review(
   uri: URI,
@@ -11,6 +19,17 @@ case class Review(
   reviewer: Reviewer,
   rating: Rating
 ) extends RDFObject {
+
+  def toRDF(): List[Statement] = {
+    val s = ref(this.uri)
+
+    List(
+      stmt(s, ref("album"), ref(this.album.uri)),
+      stmt(s, ref("reviewer"), ref(this.reviewer.uri)),
+      stmt(s, ref("rating"), ref(this.rating.uri))
+    ) ::: this.album.toRDF ::: this.reviewer.toRDF ::: this.rating.toRDF
+  }
+
   def toJSON(): JObject = {
     import org.json4s.JsonDSL._
     import org.json4s.DefaultFormats
@@ -25,23 +44,56 @@ case class Review(
 
     implicit val formats = DefaultFormats + rdfObjectSerializer
 
-    val ns = "tag:ericmoritz@gmail.com,2015:vocabs/mrs#"
+    val ns = RDFConst.Namespace
 
     ("@context" -> ("@vocab" -> ns)) ~ Extraction.decompose(this).asInstanceOf[JObject]
   }
 }
 
 case class Rating ( 
+  uri: URI,
   score: Double,
-  maxScore: Double
-) extends RDFObject
+  maxScore: Double,
+  normalizedScore: Double
+) extends RDFObject {
+
+  def toRDF(): List[Statement] = {
+    val s = ref(this.uri)
+
+    List(
+      stmt(s, ref("score"), factory.createLiteral(this.score)),
+      stmt(s, ref("maxScore"), factory.createLiteral(this.maxScore)),
+      stmt(s, ref("normalizedScore"), factory.createLiteral(this.normalizedScore))
+    )
+  }
+
+}
+
+object Rating {
+  def apply(uri: URI, score: Double, maxScore: Double) = new Rating(
+    uri,
+    score,
+    maxScore,
+    score / maxScore * 100.0
+  )
+}
+
 
 
 case class Album (
   uri: URI, 
   title: String,
   artist: String
-) extends RDFObject 
+) extends RDFObject {
+
+  def toRDF(): List[Statement] = {
+    val s = ref(this.uri)
+    List(
+      stmt(s, ref("title"), factory.createLiteral(this.title)),
+      stmt(s, ref("artist"), factory.createLiteral(this.artist))
+    )
+  }
+}
 
 object Album {
   private def encode(str: String): String = URLEncoder.encode(str, "UTF-8")
@@ -53,5 +105,14 @@ object Album {
   )
 }
 
-case class Reviewer(uri: URI, name: String) extends RDFObject
+case class Reviewer(uri: URI, name: String) extends RDFObject {
+
+  def toRDF(): List[Statement] = {
+    val s = ref(this.uri)
+
+    List(
+      stmt(s, ref("name"), factory.createLiteral(this.name))
+    )
+  }
+}
 

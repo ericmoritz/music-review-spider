@@ -1,0 +1,15 @@
+PREFIX : <tag:ericmoritz@gmail.com,2015:vocabs/mrs#>
+
+
+SELECT ?review ?title ?artist ?normalizedScore WHERE {
+       ?review :album ?album ;
+               :rating ?score .
+
+       ?album :title ?title ;
+              :artist ?artist .
+
+       ?score :normalizedScore ?normalizedScore
+       FILTER (?normalizedScore > 70)
+}
+
+ORDER BY DESC(?normalizedScore)
