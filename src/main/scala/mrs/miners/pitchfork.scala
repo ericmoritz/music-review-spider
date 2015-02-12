@@ -2,9 +2,14 @@ package mrs.miners.pitchfork
 
 import mrs.models._
 import java.net.{URI, URL}
+import java.util.Date
 import org.jsoup.Jsoup
 import com.netaporter.uri.dsl._
 import com.netaporter.uri.Uri.parse
+import com.github.nscala_time.time.Imports._
+import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.format.DateTimeFormat
+
 
 object pitchforkPageUriMiner {
   def apply(baseUrl: URL, htmlSrc: String): List[URL] = {
@@ -35,7 +40,21 @@ object pitchforkReviewUriMiner {
 
 
 object pitchforkReviewMiner {
+  def parseDate(dt: String): DayOfYear = {
+    val dateTime = DateTime.parse(
+      dt,
+      DateTimeFormat.forPattern("MMMM d, YYYY")
+    ).withZoneRetainFields(DateTimeZone.UTC)
+
+    DayOfYear(
+      dateTime.year.get, 
+      dateTime.month.get,
+      dateTime.dayOfMonth.get
+    )
+  }
+
   def apply(htmlSrc: String): Option[Review] = {
+
     val doc = Jsoup.parse(htmlSrc)
     for {
       uri <- Option(
@@ -82,9 +101,16 @@ object pitchforkReviewMiner {
         ).first
       ).map { _.text.toDouble }
 
+      pubDate <- Option(
+        doc.select(
+          """.pub-date"""
+        ).first
+      ).map { x => parseDate(x.text) }
+
     } yield {
       Review(
         uri,
+        pubDate,
         Album(
           albumTitle,
           albumArtist

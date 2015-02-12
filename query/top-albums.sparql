@@ -1,15 +1,20 @@
 PREFIX : <tag:ericmoritz@gmail.com,2015:vocabs/mrs#>
 
 
-SELECT ?review ?title ?artist ?normalizedScore WHERE {
+SELECT 
+?who ?review ?album ?score ?title ?artist ?normalizedScore
+WHERE {
        ?review :album ?album ;
                :rating ?score .
 
        ?album :title ?title ;
               :artist ?artist .
 
-       ?score :normalizedScore ?normalizedScore
-       FILTER (?normalizedScore > 70)
+       ?score :normalizedScore ?normalizedScore .
+       OPTIONAL { ?who :seen ?review }
+       FILTER ( !bound(?who) || ?who != <http://eric.themoritzfamily.com/> )
+       FILTER ( ?normalizedScore >= 80 ) .
 }
 
 ORDER BY DESC(?normalizedScore)
+LIMIT 10

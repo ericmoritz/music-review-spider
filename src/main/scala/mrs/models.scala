@@ -1,20 +1,32 @@
 package mrs.models
 
 import java.net.{URI, URLEncoder}
+
 import org.json4s._
 import mrs.const.RDFConst
 import org.openrdf.model.impl.ValueFactoryImpl
 import org.openrdf.model.{URI => RURI, BNode, Resource, Value, Statement}
+
+
+case class DayOfYear(year: Integer, month: Integer, day: Integer) {
+  override def toString(): String = f"${this.year}-${this.month}%02d-${day}"
+}
+
 
 class RDFObject {
   val factory = ValueFactoryImpl.getInstance()
   def ref(uri: URI): RURI = factory.createURI(uri.toString)
   def ref(p: String): RURI = factory.createURI(s"${RDFConst.Namespace}${p}")
   def stmt(s: Resource, p: RURI, o: Value) = factory.createStatement(s, p, o)
+  def date(x: DayOfYear) = factory.createLiteral(
+    x.toString,
+    factory.createURI("http://www.w3.org/2001/XMLSchema#date")
+  )
 }
 
 case class Review(
   uri: URI,
+  pubDate: DayOfYear,
   album: Album,
   reviewer: Reviewer,
   rating: Rating
@@ -25,6 +37,7 @@ case class Review(
 
     List(
       stmt(s, ref("album"), ref(this.album.uri)),
+      stmt(s, ref("pubDate"), date(this.pubDate)),
       stmt(s, ref("reviewer"), ref(this.reviewer.uri)),
       stmt(s, ref("rating"), ref(this.rating.uri))
     ) ::: this.album.toRDF ::: this.reviewer.toRDF ::: this.rating.toRDF
@@ -39,6 +52,8 @@ case class Review(
       {
         case ("uri", x: URI) => Some("@id", x.toString)
         case (key, x: URI) => Some(key, x.toString)
+        case (key, x: DayOfYear) => Some(key, x.toString)
+        case ("factory", _) => None
       }
     )
 

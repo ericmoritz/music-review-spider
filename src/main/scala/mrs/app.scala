@@ -17,6 +17,8 @@ case class Config(
 
 
 object MRSApp extends App {
+  args.foreach { println }
+
   val config = 
     if (args.length == 1) {
       Config(Some(args(0)), None, None)

@@ -18,6 +18,8 @@ libraryDependencies += "org.openrdf.sesame" % "sesame-repository" % "2.7.14"
 
 libraryDependencies += "org.openrdf.sesame" % "sesame-repository-sparql" % "2.7.14"
 
+libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "1.8.0"
+
 scalacOptions in Test ++= Seq("-Yrangepos")
 
 resolvers ++= Seq("snapshots", "releases").map(Resolver.sonatypeRepo)

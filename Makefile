@@ -1,5 +1,5 @@
 all:
-	sbt compile
+	sbt stage
 
 test:
 	sbt test
