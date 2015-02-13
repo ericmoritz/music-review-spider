@@ -9,7 +9,7 @@ import org.openrdf.model.{URI => RURI, BNode, Resource, Value, Statement}
 
 
 case class DayOfYear(year: Integer, month: Integer, day: Integer) {
-  override def toString(): String = f"${this.year}-${this.month}%02d-${day}"
+  override def toString(): String = f"${this.year}-${this.month}%02d-${day}%02d"
 }
 
 

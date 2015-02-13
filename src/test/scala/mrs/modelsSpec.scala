@@ -8,6 +8,14 @@ import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 import org.joda.time.{DateTime, DateTimeZone}
 
+object DayOfYearSpec extends Specification {
+  "DayOfYear" should {
+    "serialized to an iso-8601 date with leading zeros" in {
+      DayOfYear(2010, 1, 1).toString mustEqual "2010-01-01"
+    }
+  }
+}
+
 object ReviewSpec extends Specification {
   "review" should {
     "serialize as JSON-LD" in {
