@@ -9,122 +9,57 @@ import com.netaporter.uri.Uri.parse
 import com.github.nscala_time.time.Imports._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
+import org.json4s._
 
 
-object pitchforkPageUriMiner {
-  def apply(baseUrl: URL, htmlSrc: String): List[URL] = {
-    import collection.JavaConversions._
+object pitchforkReviewsMiner {
+  def apply(reviews: String): List[Review] {
+    val json = parse(reviews)
+    for {
+      JObject(result) <- json \ "results"
+      JObject(rating) <- result \ "tombstone" \ "rating"
+      JObject(author) <- result \ "authors"
+      JObject(artist) <- result \ "artists"
 
-    val doc = Jsoup.parse(htmlSrc)
-    doc.select(
-      """.page-numbers a"""
-    ).iterator.map { 
-      el => baseUrl.toURI.resolve(new URI(el.attr("href"))).toURL
-    }.to[List]
+      JString("url", JString(reviewURL)) <- result
+      JField("title", JString(albumTitle)) <- result
+      JField("timestamp", JLong(timestamp)) <- result
+      JField("display_name", JString(artistName)) <- artists
+
+      JField("name", JString(authorName)) <- author
+      JField("url", JString(authorURL)) <- author
+
+      JField("rating", JString(rating)) <- rating
+
+    } yeild (
+      Review(
+        new URI("http://pitchfork.com" + reviewURL),
+        parseDate(timestamp),
+        Album(
+          albumTitle,
+          artistName
+        ),
+        Reviewer(
+          new URI("http://pitchfork.com" + authorURL),
+          authorName
+        ),
+        Rating(
+          new URI("http://pitchfork.com" + reviewURL + "#rating"),
+          Double.parseDouble(rating),
+          10.0
+        )
+      )
+    )
   }
 }
 
-
-object pitchforkReviewUriMiner {
-  def apply(baseUrl: URL, htmlSrc: String) : List[URL] = {
-    import collection.JavaConversions._
-
-    val doc = Jsoup.parse(htmlSrc)
-    doc.select(
-      """#main > .object-grid  a"""
-    ).iterator.map { el =>
-      baseUrl.toURI.resolve(new URI(el.attr("href"))).toURL
-    }.to[List]
-  }
-}
-
-
-object pitchforkReviewMiner {
-  def parseDate(dt: String): DayOfYear = {
-    val dateTime = DateTime.parse(
-      dt,
-      DateTimeFormat.forPattern("MMMM d, YYYY")
-    ).withZoneRetainFields(DateTimeZone.UTC)
-
+object parseDate {
+  def apply(ts: Long): DayOfYear = {
+    val dateTime = DateTime(ts)
     DayOfYear(
-      dateTime.year.get, 
+      dateTime.year.get,
       dateTime.month.get,
       dateTime.dayOfMonth.get
     )
-  }
-
-  def apply(htmlSrc: String): Option[Review] = {
-
-    val doc = Jsoup.parse(htmlSrc)
-    for {
-      uri <- Option(
-        doc.select(
-          """meta[property="og:url"]"""
-        ).first
-      ).map { x => new URI(x.attr("content")) }
-
-      ratingUri = new URI(uri.toString + "#rating")
-
-      albumTitle <- Option(
-        doc.select(
-          """.review-meta .info h2"""
-        ).first
-      ).map { _.text }
-
-      albumArtist <- Option(
-        doc.select(
-          """.review-meta .info h1 a"""
-        ).first
-      ).map { _.text }
-
-      reviewerNode <-  Option(
-        doc.select(
-          """.review-meta .info h4"""
-        ).first
-      )
-
-      reviewerUri <- Option(
-        reviewerNode.select(
-          """a"""
-        ).first
-      ).map { x => uri.resolve(new URI(x.attr("href"))) }
-
-      reviewerName <- Option(
-        reviewerNode.select(
-          """address"""
-        ).first
-      ).map { _.text }
-
-      rating <- Option(
-        doc.select(
-          """.score"""
-        ).first
-      ).map { _.text.toDouble }
-
-      pubDate <- Option(
-        doc.select(
-          """.pub-date"""
-        ).first
-      ).map { x => parseDate(x.text) }
-
-    } yield {
-      Review(
-        uri,
-        pubDate,
-        Album(
-          albumTitle,
-          albumArtist
-        ),
-        Reviewer(
-          reviewerUri,
-          reviewerName
-        ),
-        Rating(
-          ratingUri,
-          rating, 
-          10
-        )
-      )
-    }
   }
 }

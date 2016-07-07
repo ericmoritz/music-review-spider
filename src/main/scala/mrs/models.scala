@@ -2,6 +2,7 @@ package mrs.models
 
 import java.net.{URI, URLEncoder}
 
+import org.json4s.native.JsonMethods._
 import org.json4s._
 import mrs.const.RDFConst
 import org.openrdf.model.impl.ValueFactoryImpl
@@ -65,7 +66,7 @@ case class Review(
   }
 }
 
-case class Rating ( 
+case class Rating (
   uri: URI,
   score: Double,
   maxScore: Double,
@@ -96,7 +97,7 @@ object Rating {
 
 
 case class Album (
-  uri: URI, 
+  uri: URI,
   title: String,
   artist: String
 ) extends RDFObject {
@@ -115,7 +116,7 @@ object Album {
 
   def apply(title: String, artist: String) = new Album(
       new URI(s"tag:ericmoritz@gmail.com,2015:mrs/albums/${encode(artist)}-${encode(title)}"),
-      title, 
+      title,
       artist
   )
 }
@@ -130,4 +131,3 @@ case class Reviewer(uri: URI, name: String) extends RDFObject {
     )
   }
 }
-
